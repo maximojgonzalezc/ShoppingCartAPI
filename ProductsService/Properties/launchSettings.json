@@ -3,7 +3,9 @@
     "ProductsService": {
       "commandName": "Project",
       "commandLineArgs": "--port 7225",
-      "launchBrowser": false
+      "environmentVariables": {
+        "DB_CONNECTION_STRING ": ""
+      }
     }
   }
 }
