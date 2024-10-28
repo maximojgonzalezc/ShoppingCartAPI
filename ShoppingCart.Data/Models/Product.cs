@@ -9,5 +9,5 @@ public class Product
     public string? ImageURL { get; set; }
     public double Price { get; set; }
     public BulkPricing? BulkPricing { get; set; }
-    public Discount Discount { get; set; } // Cambiado a no-nullable
+    public Discount Discount { get; set; } = new Discount(); 
 }

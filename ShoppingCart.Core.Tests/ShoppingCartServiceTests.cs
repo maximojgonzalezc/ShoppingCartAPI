@@ -1,96 +1,163 @@
 using FluentAssertions;
+using Moq;
+using ShoppingCart.Core.DTOs;
 using ShoppingCart.Core.Interfaces;
-using ShoppingCart.Core.Models;
 using ShoppingCart.Core.Services;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using ShoppingCart.Data.Models;
 
 namespace ShoppingCart.Core.Tests
 {
     [TestClass]
     public class ShoppingCartServiceTests
     {
-        private IShoppingCartService? _cartService;
+        private IShoppingCartService _cartService;
+        private Mock<IProductService> _productServiceMock;
 
         [TestInitialize]
         public void Setup()
         {
-            // Given - Initialize the shopping cart service before each test
-            _cartService = new ShoppingCartService();
+            _productServiceMock = new Mock<IProductService>();
+            _cartService = new ShoppingCartService(_productServiceMock.Object);
         }
 
         [TestMethod]
-        public void AddItem_ShouldAddProductToCart()
+        public async Task CalculateTotal_NoSales_EightCookies_ShouldReturnCorrectTotal()
         {
-            var product = new Product { Id = 1, Name = "Brownie", Price = 2.00 };
-            _cartService!.AddItem(product, 3);
-
-            var items = _cartService.GetItems();
-            items.Should().HaveCount(1, "because one item was added to the cart");
-            items[0].Quantity.Should().Be(3, "because the added quantity was 3");
-        }
-
-        [TestMethod]
-        public void CalculateTotal_NoDiscountsOrBulkPricing_ShouldReturnCorrectTotal()
-        {
-            _cartService!.AddItem(new Product { Id = 1, Name = "Brownie", Price = 2.00 }, 3);
-
-            var total = _cartService.CalculateTotal(DateTime.Now);
-
-            total.Should().Be(6.00, "because 3 brownies at 2.00 each equals 6.00");
-        }
-
-        [TestMethod]
-        public void CalculateTotal_WithBulkPricing_ShouldApplyBulkPricingCorrectly()
-        {
-            _cartService!.AddItem(new Product
+            var cookie = new ProductDto
             {
                 Id = 1,
                 Name = "Cookie",
                 Price = 1.25,
-                BulkPricing = new BulkPricing { Amount = 4, TotalPrice = 7.00 }
-            }, 8);
+                SupportsBulkPricing = true,
+                Discounts = new List<DiscountDto>
+                {
+                    new DiscountDto { RequiredQuantity = 6, DiscountPercentage = 0.20, DiscountType = DiscountType.Bulk }
+                }
+            };
 
+            _productServiceMock.Setup(ps => ps.GetProductByIdAsync(cookie.Id)).ReturnsAsync(cookie);
+
+            await _cartService.AddItem(cookie.Id, 8);
             var total = _cartService.CalculateTotal(DateTime.Now);
 
-            total.Should().Be(14.00, "because 8 cookies with bulk pricing (2 sets of 4 at 7.00 each) equals 14.00");
+            total.Should().Be(8.50, "because 8 cookies without sales total $8.50");
         }
 
         [TestMethod]
-        public void CalculateTotal_WithFridayDiscount_ShouldApplyFridayDiscount()
+        public async Task CalculateTotal_NoSales_MixedItems_ShouldReturnCorrectTotal()
         {
-            _cartService!.AddItem(new Product { Id = 1, Name = "Cookie", Price = 1.25 }, 8);
+            var cookie = new ProductDto
+            {
+                Id = 1,
+                Name = "Cookie",
+                Price = 1.25,
+                SupportsBulkPricing = true,
+                Discounts = new List<DiscountDto> { new DiscountDto { RequiredQuantity = 6, DiscountPercentage = 0.20, DiscountType = DiscountType.Bulk } }
+            };
+            var brownie = new ProductDto { Id = 2, Name = "Brownie", Price = 2.00 };
+            var cheesecake = new ProductDto { Id = 3, Name = "Key Lime Cheesecake", Price = 8.00 };
+            var donut = new ProductDto
+            {
+                Id = 4,
+                Name = "Mini Gingerbread Donut",
+                Price = 0.50,
+                Discounts = new List<DiscountDto> { new DiscountDto { RequiredQuantity = 2, DiscountPercentage = 0.50, DiscountType = DiscountType.SpecialDay } },
+                DaysOfWeek = new List<DayOfWeek> { DayOfWeek.Tuesday }
+            };
 
-            var total = _cartService.CalculateTotal(new DateTime(2024, 10, 25)); // A Friday
+            _productServiceMock.Setup(ps => ps.GetProductByIdAsync(cookie.Id)).ReturnsAsync(cookie);
+            _productServiceMock.Setup(ps => ps.GetProductByIdAsync(brownie.Id)).ReturnsAsync(brownie);
+            _productServiceMock.Setup(ps => ps.GetProductByIdAsync(cheesecake.Id)).ReturnsAsync(cheesecake);
+            _productServiceMock.Setup(ps => ps.GetProductByIdAsync(donut.Id)).ReturnsAsync(donut);
 
-            total.Should().Be(6.00, "because Friday discount for 8 cookies is 6.00");
+            await _cartService.AddItem(cookie.Id, 1);
+            await _cartService.AddItem(brownie.Id, 1);
+            await _cartService.AddItem(cheesecake.Id, 1);
+            await _cartService.AddItem(donut.Id, 2);
+
+            var total = _cartService.CalculateTotal(DateTime.Now);
+            total.Should().Be(12.25, "because 1 cookie, 1 brownie, 1 cheesecake, and 2 donuts without sales total $12.25");
         }
 
         [TestMethod]
-        public void CalculateTotal_WithOctoberDiscount_ShouldApplyOctoberDiscount()
+        public async Task CalculateTotal_NoSales_OneCookieFourBrowniesOneCheesecake_ShouldReturnCorrectTotal()
         {
-            _cartService!.AddItem(new Product { Id = 2, Name = "Key Lime Cheesecake", Price = 8.00 }, 2);
+            var cookie = new ProductDto
+            {
+                Id = 1,
+                Name = "Cookie",
+                Price = 1.25,
+                SupportsBulkPricing = true,
+                Discounts = new List<DiscountDto> { new DiscountDto { RequiredQuantity = 6, DiscountPercentage = 0.20, DiscountType = DiscountType.Bulk } }
+            };
+            var brownie = new ProductDto
+            {
+                Id = 2,
+                Name = "Brownie",
+                Price = 2.00,
+                SupportsBulkPricing = true,
+                Discounts = new List<DiscountDto> { new DiscountDto { RequiredQuantity = 4, DiscountPercentage = 0.125, DiscountType = DiscountType.Bulk } }
+            };
+            var cheesecake = new ProductDto
+            {
+                Id = 3,
+                Name = "Key Lime Cheesecake",
+                Price = 8.00
+            };
+
+            _productServiceMock.Setup(ps => ps.GetProductByIdAsync(cookie.Id)).ReturnsAsync(cookie);
+            _productServiceMock.Setup(ps => ps.GetProductByIdAsync(brownie.Id)).ReturnsAsync(brownie);
+            _productServiceMock.Setup(ps => ps.GetProductByIdAsync(cheesecake.Id)).ReturnsAsync(cheesecake);
+
+            await _cartService.AddItem(cookie.Id, 1);
+            await _cartService.AddItem(brownie.Id, 4);
+            await _cartService.AddItem(cheesecake.Id, 1);
+
+            var total = _cartService.CalculateTotal(DateTime.Now);
+            total.Should().Be(16.25, "because 1 cookie, 4 brownies, and 1 cheesecake without sales total $16.25");
+        }
+
+        [TestMethod]
+        public async Task CalculateTotal_SpecialDay_OctoberFirst_EightCookiesFourCheesecakes_ShouldReturnCorrectTotal()
+        {
+            var cookie = new ProductDto
+            {
+                Id = 1,
+                Name = "Cookie",
+                Price = 1.25,
+                SupportsBulkPricing = true,
+                Discounts = new List<DiscountDto>
+                {
+                    new DiscountDto { RequiredQuantity = 8, DiscountPercentage = 0.40, DiscountType = DiscountType.SpecialDay },
+                    new DiscountDto { RequiredQuantity = 6, DiscountPercentage = 0.20, DiscountType = DiscountType.Bulk }
+                },
+                DaysOfWeek = new List<DayOfWeek> { DayOfWeek.Friday }
+            };
+
+            var cheesecake = new ProductDto
+            {
+                Id = 2,
+                Name = "Key Lime Cheesecake",
+                Price = 8.00,
+                Discounts = new List<DiscountDto>
+                {
+                    new DiscountDto { DiscountPercentage = 0.25, RequiredQuantity = 1, DiscountType = DiscountType.SpecialDay }
+                },
+                SpecificDate = new DateTime(2024, 10, 1)
+            };
+
+            _productServiceMock.Setup(ps => ps.GetProductByIdAsync(cookie.Id)).ReturnsAsync(cookie);
+            _productServiceMock.Setup(ps => ps.GetProductByIdAsync(cheesecake.Id)).ReturnsAsync(cheesecake);
+
+            await _cartService.AddItem(cookie.Id, 8);
+            await _cartService.AddItem(cheesecake.Id, 4);
 
             var total = _cartService.CalculateTotal(new DateTime(2024, 10, 1));
-
-            total.Should().Be(12.00, "because 25% discount in October for cheesecakes makes the total 12.00");
-        }
-
-        [TestMethod]
-        public void CalculateTotal_WithTuesdayDiscount_ShouldApplyTuesdayDiscount()
-        {
-            _cartService!.AddItem(new Product { Id = 3, Name = "Mini Gingerbread Donut", Price = 0.50 }, 4);
-
-            var total = _cartService.CalculateTotal(new DateTime(2024, 10, 22)); // A Tuesday
-
-            total.Should().Be(1.00, "because 2-for-1 discount on Tuesday makes the total 1.00");
-        }
-
-        [TestMethod]
-        public void ClearCart_ShouldRemoveAllItemsFromCart()
-        {
-            _cartService!.AddItem(new Product { Id = 1, Name = "Brownie", Price = 2.00 }, 3);
-            _cartService.ClearCart();
-
-            _cartService.GetItems().Should().BeEmpty("because ClearCart was called");
+            total.Should().Be(32.50, "because on October 1st, 8 cookies and 4 cheesecakes with a 25% discount total $32.50");
         }
     }
 }

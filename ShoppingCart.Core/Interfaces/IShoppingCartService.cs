@@ -1,16 +1,18 @@
 ﻿
-using ShoppingCart.Core.Models;
+using ShoppingCart.Core.DTOs;
 
 namespace ShoppingCart.Core.Interfaces
 {
     public interface IShoppingCartService
     {
-        void AddItem(Product product, int quantity);
+        public Task AddItem (int productId, int quantity);
 
-        void ClearCart();
+        public void ClearCart();
+
+        double CalculateItemTotal(ProductDto product, int quantity, DateTime date);
+
+        public List<ShoppingCartItemDto> GetItems();
 
         double CalculateTotal(DateTime date);
-
-        List<ShoppingCartItem> GetItems();
     }
-}
+} 

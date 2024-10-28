@@ -11,20 +11,21 @@ public class CalculateCartTotal
 {
     private readonly ILogger<CalculateCartTotal> _logger;
     private readonly IShoppingCartService _cartService;
+    private readonly IProductService _productService; // Inyectar el servicio de productos
 
-    public CalculateCartTotal(ILogger<CalculateCartTotal> logger, IShoppingCartService cartService)
+    public CalculateCartTotal(ILogger<CalculateCartTotal> logger, IShoppingCartService cartService, IProductService productService)
     {
         _logger = logger;
         _cartService = cartService;
+        _productService = productService;
     }
 
     [Function("CalculateCartTotal")]
     public async Task<HttpResponseData> Run(
-        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "cart/calculate")] HttpRequestData req)
+    [HttpTrigger(AuthorizationLevel.Function, "post", Route = "cart/calculate")] HttpRequestData req)
     {
         _logger.LogInformation("Calculating cart total...");
 
-        // Leer el contenido del request (JSON) y validar
         var requestBody = await req.ReadAsStringAsync();
         if (string.IsNullOrEmpty(requestBody))
         {
@@ -33,13 +34,7 @@ public class CalculateCartTotal
             return emptyRequestResponse;
         }
 
-        // Configurar opciones de deserialización
-        var options = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        };
-
-        // Deserializar el cuerpo del request
+        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         var cartRequest = JsonSerializer.Deserialize<CartRequest>(requestBody, options);
 
         if (cartRequest == null || cartRequest.Items == null || cartRequest.Items.Count == 0)
@@ -49,28 +44,34 @@ public class CalculateCartTotal
             return badRequestResponse;
         }
 
-        // Limpiar el carrito para la nueva solicitud
         _cartService.ClearCart();
 
-        // Agregar los productos al carrito
         foreach (var item in cartRequest.Items)
         {
-            if (item.Product == null)
+            if (item.ProductId == 0)
             {
                 var invalidProductResponse = req.CreateResponse(System.Net.HttpStatusCode.BadRequest);
-                invalidProductResponse.WriteString("Product information is missing.");
+                invalidProductResponse.WriteString("Product ID is missing.");
                 return invalidProductResponse;
             }
-            _cartService.AddItem(item.Product, item.Quantity);
+
+            // Obtener el producto desde el servicio
+            var product = await _productService.GetProductByIdAsync(item.ProductId);
+            if (product == null)
+            {
+                var notFoundResponse = req.CreateResponse(System.Net.HttpStatusCode.NotFound);
+                notFoundResponse.WriteString($"Product with ID {item.ProductId} not found.");
+                return notFoundResponse;
+            }
+
+            await _cartService.AddItem(product.Id, item.Quantity);
         }
 
-        // Calcular el total
         var total = _cartService.CalculateTotal(cartRequest.Date);
-
-        // Crear la respuesta con el total calculado
         var response = req.CreateResponse(System.Net.HttpStatusCode.OK);
         await response.WriteAsJsonAsync(new { Total = total });
 
         return response;
     }
+
 }

@@ -1,22 +1,36 @@
-﻿using ShoppingCart.Core.Interfaces;
+﻿using ShoppingCart.Core.DTOs;
+using ShoppingCart.Core.Interfaces;
 using ShoppingCart.Core.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace ShoppingCart.Core.Services
 {
     public class ShoppingCartService : IShoppingCartService
     {
-        private readonly List<ShoppingCartItem> _items = new();
+        private readonly List<ShoppingCartItemDto> _items = new();
+        private readonly IProductService _productService;
 
-        public void AddItem(Product product, int quantity)
+        public ShoppingCartService(IProductService productService)
         {
-            var existingItem = _items.FirstOrDefault(i => i.Product.Id == product.Id);
+            _productService = productService;
+        }
+
+        public async Task AddItem(int productId, int quantity)
+        {
+            var product = await _productService.GetProductByIdAsync(productId);
+            if (product == null) throw new ArgumentException("Invalid product ID");
+
+            var existingItem = _items.FirstOrDefault(i => i.ProductId == productId);
             if (existingItem != null)
             {
                 existingItem.Quantity += quantity;
             }
             else
             {
-                _items.Add(new ShoppingCartItem { Product = product, Quantity = quantity });
+                _items.Add(new ShoppingCartItemDto { ProductId = productId, Quantity = quantity });
             }
         }
 
@@ -25,54 +39,58 @@ namespace ShoppingCart.Core.Services
             _items.Clear();
         }
 
+        public double CalculateItemTotal(ProductDto product, int quantity, DateTime date)
+        {
+            double total = 0.0;
+
+            // Verificar si es un día especial (día específico o día de la semana)
+            bool isSpecialDay = (product.SpecificDate.HasValue && product.SpecificDate.Value.Date == date.Date) ||
+                                product.DaysOfWeek.Contains(date.DayOfWeek);
+
+            // Aplicar descuento por día especial si corresponde
+            var specialDiscount = product.Discounts
+                .FirstOrDefault(d => isSpecialDay && d.DiscountType == DiscountType.SpecialDay && d.RequiredQuantity <= quantity);
+
+            if (specialDiscount != null)
+            {
+                int sets = quantity / specialDiscount.RequiredQuantity;
+                total += specialDiscount.CalculateDiscount(product.Price, sets * specialDiscount.RequiredQuantity);
+                quantity %= specialDiscount.RequiredQuantity; // Cantidad restante después del descuento especial
+            }
+
+            // Aplicar descuento por cantidad (bulk) si el producto soporta bulk pricing y queda cantidad
+            if (product.SupportsBulkPricing && quantity > 0)
+            {
+                var bulkDiscount = product.Discounts
+                    .FirstOrDefault(d => d.DiscountType == DiscountType.Bulk && d.RequiredQuantity <= quantity);
+
+                if (bulkDiscount != null)
+                {
+                    int sets = quantity / bulkDiscount.RequiredQuantity;
+                    total += bulkDiscount.CalculateDiscount(product.Price, sets * bulkDiscount.RequiredQuantity);
+                    quantity %= bulkDiscount.RequiredQuantity; // Cantidad restante después del descuento por cantidad
+                }
+            }
+
+            // Calcular el precio regular para la cantidad restante
+            total += quantity * product.Price;
+            return total;
+        }
+
+
+
+
+
         public double CalculateTotal(DateTime date)
         {
-            double total = 0.0;
-
-            foreach (var item in _items)
+            return _items.Sum(item =>
             {
-                total += CalculateItemTotal(item, date);
-            }
-
-            return total;
+                var product = _productService.GetProductByIdAsync(item.ProductId).Result;
+                return product != null ? CalculateItemTotal(product, item.Quantity, date) : 0.0;
+            });
         }
 
-        private double CalculateItemTotal(ShoppingCartItem item, DateTime date)
-        {
-            double total = 0.0;
-            var product = item.Product;
-
-            // Aplicar precios por volumen
-            if (product.BulkPricing != null && item.Quantity >= product.BulkPricing.Amount)
-            {
-                int bulkSets = item.Quantity / product.BulkPricing.Amount;
-                int remainder = item.Quantity % product.BulkPricing.Amount;
-                total += bulkSets * product.BulkPricing.TotalPrice + remainder * product.Price;
-            }
-            else
-            {
-                // Precio regular
-                total += item.Quantity * product.Price;
-            }
-
-            // Aplicar descuentos basados en la fecha o día
-            if (date.DayOfWeek == DayOfWeek.Friday && product.Name == "Cookie" && item.Quantity >= 8)
-            {
-                total = 6.0; // Precio especial para 8 cookies los viernes
-            }
-            else if (date.Month == 10 && product.Name == "Key Lime Cheesecake")
-            {
-                total *= 0.75; // 25% de descuento en octubre para "Key Lime Cheesecake"
-            }
-            else if (date.DayOfWeek == DayOfWeek.Tuesday && product.Name == "Mini Gingerbread Donut" && item.Quantity >= 2)
-            {
-                total -= (item.Quantity / 2) * product.Price; // 2x1 en martes para "Mini Gingerbread Donut"
-            }
-
-            return total;
-        }
-
-        public List<ShoppingCartItem> GetItems()
+        public List<ShoppingCartItemDto> GetItems()
         {
             return _items;
         }
