@@ -1,20 +1,15 @@
-﻿namespace ShoppingCart.Core.DTOs
+﻿using ShoppingCart.Common.Enums;
+
+namespace ShoppingCart.Core.DTOs;
+
+public class DiscountDto
 {
-    public enum DiscountType
-    {
-        SpecialDay,
-        Bulk
-    }
+    public int RequiredQuantity { get; set; }
+    public double DiscountPercentage { get; set; }
+    public DiscountType DiscountType { get; set; }
 
-    public class DiscountDto
+    public double CalculateDiscount(double basePrice, int quantity)
     {
-        public int RequiredQuantity { get; set; }
-        public double DiscountPercentage { get; set; }
-        public DiscountType DiscountType { get; set; }
-
-        public double CalculateDiscount(double basePrice, int quantity)
-        {
-            return quantity * basePrice * (1 - DiscountPercentage);
-        }
+        return quantity * basePrice * (1 - DiscountPercentage);
     }
 }

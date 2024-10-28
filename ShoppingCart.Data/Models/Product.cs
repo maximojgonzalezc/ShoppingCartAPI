@@ -9,5 +9,7 @@ public class Product
     public string? ImageURL { get; set; }
     public double Price { get; set; }
     public BulkPricing? BulkPricing { get; set; }
-    public Discount Discount { get; set; } = new Discount(); 
+    public Discount Discount { get; set; } = new Discount();
+    public bool SupportsBulkPricing { get; set; } // Bandera para indicar si soporta Bulk Pricing
+
 }

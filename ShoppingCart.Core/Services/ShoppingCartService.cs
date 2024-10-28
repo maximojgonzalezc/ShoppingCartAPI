@@ -1,10 +1,6 @@
-﻿using ShoppingCart.Core.DTOs;
+﻿using ShoppingCart.Common.Enums;
+using ShoppingCart.Core.DTOs;
 using ShoppingCart.Core.Interfaces;
-using ShoppingCart.Core.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace ShoppingCart.Core.Services
 {
@@ -43,11 +39,9 @@ namespace ShoppingCart.Core.Services
         {
             double total = 0.0;
 
-            // Verificar si es un día especial (día específico o día de la semana)
             bool isSpecialDay = (product.SpecificDate.HasValue && product.SpecificDate.Value.Date == date.Date) ||
                                 product.DaysOfWeek.Contains(date.DayOfWeek);
 
-            // Aplicar descuento por día especial si corresponde
             var specialDiscount = product.Discounts
                 .FirstOrDefault(d => isSpecialDay && d.DiscountType == DiscountType.SpecialDay && d.RequiredQuantity <= quantity);
 
@@ -55,10 +49,9 @@ namespace ShoppingCart.Core.Services
             {
                 int sets = quantity / specialDiscount.RequiredQuantity;
                 total += specialDiscount.CalculateDiscount(product.Price, sets * specialDiscount.RequiredQuantity);
-                quantity %= specialDiscount.RequiredQuantity; // Cantidad restante después del descuento especial
+                quantity %= specialDiscount.RequiredQuantity;
             }
 
-            // Aplicar descuento por cantidad (bulk) si el producto soporta bulk pricing y queda cantidad
             if (product.SupportsBulkPricing && quantity > 0)
             {
                 var bulkDiscount = product.Discounts
@@ -68,18 +61,13 @@ namespace ShoppingCart.Core.Services
                 {
                     int sets = quantity / bulkDiscount.RequiredQuantity;
                     total += bulkDiscount.CalculateDiscount(product.Price, sets * bulkDiscount.RequiredQuantity);
-                    quantity %= bulkDiscount.RequiredQuantity; // Cantidad restante después del descuento por cantidad
+                    quantity %= bulkDiscount.RequiredQuantity;
                 }
             }
 
-            // Calcular el precio regular para la cantidad restante
             total += quantity * product.Price;
             return total;
         }
-
-
-
-
 
         public double CalculateTotal(DateTime date)
         {
