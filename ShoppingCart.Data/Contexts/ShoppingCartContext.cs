@@ -1,10 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ShoppingCart.Common.Enums;
 using ShoppingCart.Core.Models;
 using ShoppingCart.Data.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 
 namespace ShoppingCart.Data.Contexts
 {
@@ -17,7 +20,39 @@ namespace ShoppingCart.Data.Contexts
         {
         }
 
-        // Método SeedData que carga los datos iniciales
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            // Value converter for List<DayOfWeek> to store it as JSON
+            var daysOfWeekConverter = new ValueConverter<List<DayOfWeek>, string>(
+                v => JsonSerializer.Serialize<List<DayOfWeek>>(v, (JsonSerializerOptions?)null),
+                v => JsonSerializer.Deserialize<List<DayOfWeek>>(v, (JsonSerializerOptions?)null) ?? new List<DayOfWeek>());
+
+
+            // Value comparer for List<DayOfWeek> to compare collections correctly
+            var daysOfWeekComparer = new ValueComparer<List<DayOfWeek>>(
+                (c1, c2) => c1.SequenceEqual(c2),
+                c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                c => c.ToList());
+
+            // Apply configurations to Product.DaysOfWeek and Discount.DaysOfWeek
+            modelBuilder.Entity<Product>()
+                .Property(p => p.DaysOfWeek)
+                .HasConversion(daysOfWeekConverter)
+                .Metadata.SetValueComparer(daysOfWeekComparer);
+
+            modelBuilder.Entity<Discount>()
+                .Property(d => d.DaysOfWeek)
+                .HasConversion(daysOfWeekConverter)
+                .Metadata.SetValueComparer(daysOfWeekComparer);
+
+            // Set up foreign key relationship with cascade delete
+            modelBuilder.Entity<Discount>()
+                .HasOne(d => d.Product)
+                .WithMany(p => p.Discounts)
+                .HasForeignKey(d => d.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
+        }
+
         public void SeedData()
         {
             if (Products.Any())
