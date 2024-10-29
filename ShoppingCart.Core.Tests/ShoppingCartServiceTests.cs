@@ -28,7 +28,6 @@ public class ShoppingCartServiceTests
             Id = 1,
             Name = "Cookie",
             Price = 1.25,
-            SupportsBulkPricing = true,
             Discounts = new List<DiscountDto>
             {
                 new DiscountDto { RequiredQuantity = 6, DiscountPercentage = 0.20, DiscountType = DiscountType.Bulk }
@@ -51,7 +50,6 @@ public class ShoppingCartServiceTests
             Id = 1,
             Name = "Cookie",
             Price = 1.25,
-            SupportsBulkPricing = true,
             Discounts = new List<DiscountDto> { new DiscountDto { RequiredQuantity = 6, DiscountPercentage = 0.20, DiscountType = DiscountType.Bulk } }
         };
         var brownie = new ProductDto { Id = 2, Name = "Brownie", Price = 2.00 };
@@ -91,7 +89,6 @@ public class ShoppingCartServiceTests
             Id = 1,
             Name = "Cookie",
             Price = 1.25,
-            SupportsBulkPricing = true,
             Discounts = new List<DiscountDto> { new DiscountDto { RequiredQuantity = 6, DiscountPercentage = 0.20, DiscountType = DiscountType.Bulk } }
         };
         var brownie = new ProductDto
@@ -99,7 +96,6 @@ public class ShoppingCartServiceTests
             Id = 2,
             Name = "Brownie",
             Price = 2.00,
-            SupportsBulkPricing = true,
             Discounts = new List<DiscountDto> { new DiscountDto { RequiredQuantity = 4, DiscountPercentage = 0.125, DiscountType = DiscountType.Bulk } }
         };
         var cheesecake = new ProductDto
@@ -129,7 +125,6 @@ public class ShoppingCartServiceTests
             Id = 1,
             Name = "Cookie",
             Price = 1.25,
-            SupportsBulkPricing = true,
             Discounts = new List<DiscountDto>
             {
                 new DiscountDto { RequiredQuantity = 8, DiscountPercentage = 0.40, DiscountType = DiscountType.SpecialDay },

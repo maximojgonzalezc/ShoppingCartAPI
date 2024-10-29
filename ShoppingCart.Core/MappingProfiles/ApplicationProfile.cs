@@ -12,13 +12,11 @@ namespace ShoppingCart.Core.Mappings
         {
             // Mapeo para Product <-> ProductDto
             CreateMap<Product, ProductDto>()
-                .ForMember(dest => dest.SupportsBulkPricing, opt => opt.MapFrom(src => src.SupportsBulkPricing))
                 .ForMember(dest => dest.DaysOfWeek, opt => opt.MapFrom(src => src.DaysOfWeek))
                 .ForMember(dest => dest.SpecificDate, opt => opt.MapFrom(src => src.SpecificDate))
                 .ForMember(dest => dest.Discounts, opt => opt.MapFrom(src => src.Discounts));
 
             CreateMap<ProductDto, Product>()
-                .ForMember(dest => dest.SupportsBulkPricing, opt => opt.MapFrom(src => src.SupportsBulkPricing))
                 .ForMember(dest => dest.DaysOfWeek, opt => opt.MapFrom(src => src.DaysOfWeek))
                 .ForMember(dest => dest.SpecificDate, opt => opt.MapFrom(src => src.SpecificDate))
                 .ForMember(dest => dest.Discounts, opt => opt.MapFrom(src => src.Discounts));

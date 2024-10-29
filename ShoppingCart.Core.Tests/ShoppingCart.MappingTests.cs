@@ -32,7 +32,6 @@ namespace ShoppingCart.Tests
                 Id = 1,
                 Name = "Cookie",
                 Price = 1.25,
-                SupportsBulkPricing = true,
                 DaysOfWeek = new List<DayOfWeek> { DayOfWeek.Friday },
                 Discounts = new List<Discount>
                 {
@@ -55,7 +54,6 @@ namespace ShoppingCart.Tests
             productDto.Id.Should().Be(product.Id);
             productDto.Name.Should().Be(product.Name);
             productDto.Price.Should().Be(product.Price);
-            productDto.SupportsBulkPricing.Should().Be(product.SupportsBulkPricing);
             productDto.DaysOfWeek.Should().BeEquivalentTo(product.DaysOfWeek);
             productDto.Discounts.Should().HaveCount(product.Discounts.Count);
             productDto.Discounts.First().DiscountPercentage.Should().Be(product.Discounts.First().DiscountPercentage);
