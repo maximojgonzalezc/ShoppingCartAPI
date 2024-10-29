@@ -262,3 +262,11 @@ paket-files/
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
 *.pyc
+
+# Excluir el directorio de configuración de Visual Studio
+.vs/
+# Excluir el archivo de caché y otros archivos de configuración
+*.suo
+*.user
+*.userosscache
+*.sln.docstates

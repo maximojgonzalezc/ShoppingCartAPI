@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using ShoppingCart.Core.Interfaces;
 using ShoppingCart.Core.Models;
+using ShoppingCart.Data.Contexts;
 
 namespace ShoppingCart.Data.Repositories;
 

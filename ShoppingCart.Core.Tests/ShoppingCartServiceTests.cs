@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Moq;
+using ShoppingCart.Common.Enums;
 using ShoppingCart.Core.DTOs;
 using ShoppingCart.Core.Interfaces;
 using ShoppingCart.Core.Services;
