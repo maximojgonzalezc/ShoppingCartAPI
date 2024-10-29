@@ -24,9 +24,8 @@ namespace ShoppingCart.Data.Contexts
         {
             // Value converter for List<DayOfWeek> to store it as JSON
             var daysOfWeekConverter = new ValueConverter<List<DayOfWeek>, string>(
-                v => JsonSerializer.Serialize<List<DayOfWeek>>(v, (JsonSerializerOptions?)null),
+                v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
                 v => JsonSerializer.Deserialize<List<DayOfWeek>>(v, (JsonSerializerOptions?)null) ?? new List<DayOfWeek>());
-
 
             // Value comparer for List<DayOfWeek> to compare collections correctly
             var daysOfWeekComparer = new ValueComparer<List<DayOfWeek>>(
@@ -34,14 +33,9 @@ namespace ShoppingCart.Data.Contexts
                 c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
                 c => c.ToList());
 
-            // Apply configurations to Product.DaysOfWeek and Discount.DaysOfWeek
+            // Apply configurations to Product.DaysOfWeek only
             modelBuilder.Entity<Product>()
                 .Property(p => p.DaysOfWeek)
-                .HasConversion(daysOfWeekConverter)
-                .Metadata.SetValueComparer(daysOfWeekComparer);
-
-            modelBuilder.Entity<Discount>()
-                .Property(d => d.DaysOfWeek)
                 .HasConversion(daysOfWeekConverter)
                 .Metadata.SetValueComparer(daysOfWeekComparer);
 
@@ -56,36 +50,31 @@ namespace ShoppingCart.Data.Contexts
         public void SeedData()
         {
             if (Products.Any())
-                return; // Si ya existen productos, no hacer nada
+                return;
 
-            // Crear productos
             var products = new List<Product>
             {
                 new Product
                 {
-                    Id = 1,
                     Name = "Cookie",
                     Price = 1.25,
                     SupportsBulkPricing = true,
-                    DaysOfWeek = new List<DayOfWeek> { DayOfWeek.Friday } // Descuento especial los viernes
+                    DaysOfWeek = new List<DayOfWeek> { DayOfWeek.Friday }
                 },
                 new Product
                 {
-                    Id = 2,
                     Name = "Key Lime Cheesecake",
                     Price = 8.00,
-                    SpecificDate = new DateTime(DateTime.Now.Year, 10, 1) // Descuento especial el 1 de octubre
+                    SpecificDate = new DateTime(DateTime.Now.Year, 10, 1)
                 },
                 new Product
                 {
-                    Id = 3,
                     Name = "Mini Gingerbread Donut",
                     Price = 0.50,
-                    DaysOfWeek = new List<DayOfWeek> { DayOfWeek.Tuesday } // Descuento especial los martes
+                    DaysOfWeek = new List<DayOfWeek> { DayOfWeek.Tuesday }
                 },
                 new Product
                 {
-                    Id = 4,
                     Name = "Brownie",
                     Price = 2.00,
                     SupportsBulkPricing = true
@@ -95,48 +84,48 @@ namespace ShoppingCart.Data.Contexts
             Products.AddRange(products);
             SaveChanges();
 
-            // Recuperar los productos ya guardados
+            // Recuperar los productos para asociar en descuentos
             var cookie = Products.First(p => p.Name == "Cookie");
             var cheesecake = Products.First(p => p.Name == "Key Lime Cheesecake");
             var donut = Products.First(p => p.Name == "Mini Gingerbread Donut");
             var brownie = Products.First(p => p.Name == "Brownie");
 
-            // Crear descuentos utilizando DiscountPercentage en lugar de DiscountPrice
+            // Crear descuentos sin referencia a DaysOfWeek en Discounts
             var discounts = new List<Discount>
             {
                 new Discount
                 {
                     ProductId = cookie.Id,
                     RequiredQuantity = 8,
-                    DiscountPercentage = 0.40, // 40% de descuento para 8 cookies los viernes
+                    DiscountPercentage = 0.40,
                     DiscountType = (int)DiscountType.SpecialDay
                 },
                 new Discount
                 {
                     ProductId = cheesecake.Id,
                     RequiredQuantity = 1,
-                    DiscountPercentage = 0.25, // 25% de descuento el 1 de octubre
+                    DiscountPercentage = 0.25,
                     DiscountType = (int)DiscountType.SpecialDay
                 },
                 new Discount
                 {
                     ProductId = donut.Id,
                     RequiredQuantity = 2,
-                    DiscountPercentage = 0.50, // Dos por uno los martes (50% de descuento)
+                    DiscountPercentage = 0.50,
                     DiscountType = (int)DiscountType.SpecialDay
                 },
                 new Discount
                 {
                     ProductId = cookie.Id,
                     RequiredQuantity = 6,
-                    DiscountPercentage = 0.20, // Descuento por cantidad (6 por 20% menos)
+                    DiscountPercentage = 0.20,
                     DiscountType = (int)DiscountType.Bulk
                 },
                 new Discount
                 {
                     ProductId = brownie.Id,
                     RequiredQuantity = 4,
-                    DiscountPercentage = 0.125, // Descuento por cantidad (4 brownies por $7)
+                    DiscountPercentage = 0.125,
                     DiscountType = (int)DiscountType.Bulk
                 }
             };

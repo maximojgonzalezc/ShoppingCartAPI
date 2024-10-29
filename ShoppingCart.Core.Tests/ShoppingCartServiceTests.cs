@@ -38,7 +38,7 @@ public class ShoppingCartServiceTests
         _productServiceMock.Setup(ps => ps.GetProductByIdAsync(cookie.Id)).ReturnsAsync(cookie);
 
         await _cartService.AddItem(cookie.Id, 8);
-        var total = _cartService.CalculateTotal(DateTime.Now);
+        var total = _cartService.CalculateTotal(new DateTime(2024, 10, 30));
 
         total.Should().Be(8.50, "because 8 cookies without sales total $8.50");
     }
@@ -62,7 +62,7 @@ public class ShoppingCartServiceTests
             Name = "Mini Gingerbread Donut",
             Price = 0.50,
             Discounts = new List<DiscountDto> { new DiscountDto { RequiredQuantity = 2, DiscountPercentage = 0.50, DiscountType = DiscountType.SpecialDay } },
-            DaysOfWeek = new List<DayOfWeek> { DayOfWeek.Tuesday }
+            DaysOfWeek = new List<DayOfWeek> { DayOfWeek.Tuesday } // Descuento aplicable solo los martes
         };
 
         _productServiceMock.Setup(ps => ps.GetProductByIdAsync(cookie.Id)).ReturnsAsync(cookie);
@@ -75,9 +75,13 @@ public class ShoppingCartServiceTests
         await _cartService.AddItem(cheesecake.Id, 1);
         await _cartService.AddItem(donut.Id, 2);
 
-        var total = _cartService.CalculateTotal(DateTime.Now);
+        // Utiliza un día que no sea martes (por ejemplo, un miércoles) para evitar el descuento
+        var fixedDate = new DateTime(2024, 10, 30); // Un miércoles
+        var total = _cartService.CalculateTotal(fixedDate);
+
         total.Should().Be(12.25, "because 1 cookie, 1 brownie, 1 cheesecake, and 2 donuts without sales total $12.25");
     }
+
 
     [TestMethod]
     public async Task CalculateTotal_NoSales_OneCookieFourBrowniesOneCheesecake_ShouldReturnCorrectTotal()
@@ -113,7 +117,7 @@ public class ShoppingCartServiceTests
         await _cartService.AddItem(brownie.Id, 4);
         await _cartService.AddItem(cheesecake.Id, 1);
 
-        var total = _cartService.CalculateTotal(DateTime.Now);
+        var total = _cartService.CalculateTotal(new DateTime(2024, 10, 30));
         total.Should().Be(16.25, "because 1 cookie, 4 brownies, and 1 cheesecake without sales total $16.25");
     }
 

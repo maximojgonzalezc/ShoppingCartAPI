@@ -35,6 +35,8 @@ var host = new HostBuilder()
 // Ejecutar migraciones y cargar datos iniciales
 using (var scope = host.Services.CreateScope())
 {
+    Console.WriteLine("Connection String: " + Environment.GetEnvironmentVariable("DB_CONNECTION_STRING"));
+
     var dbContext = scope.ServiceProvider.GetRequiredService<ShoppingCartContext>();
     dbContext.Database.Migrate(); // Asegura que las migraciones están aplicadas
     dbContext.SeedData();         // Invoca SeedData para insertar datos iniciales

@@ -11,5 +11,4 @@ public class Discount
     public int RequiredQuantity { get; set; } // Cantidad mínima para aplicar el descuento
     public double? DiscountPercentage { get; set; } // Porcentaje de descuento para día especial
     public int DiscountType { get; set; } // Tipo de descuento (SpecialDay o Bulk)
-    public List<DayOfWeek> DaysOfWeek { get; set; } = new(); // Días aplicables semanalmente
 }

@@ -31,7 +31,6 @@ namespace ShoppingCart.Data.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("DaysOfWeek")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ImageURL")
@@ -61,10 +60,6 @@ namespace ShoppingCart.Data.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("DaysOfWeek")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<double?>("DiscountPercentage")
                         .HasColumnType("float");

@@ -2,10 +2,7 @@
   "profiles": {
     "ProductsService": {
       "commandName": "Project",
-      "commandLineArgs": "--port 7225",
-      "environmentVariables": {
-        "DB_CONNECTION_STRING ": "Server=(localdb)\\\\MSSQLLocalDB;Database=ShoppingCartDb;Trusted_Connection=True"
-      }
+      "commandLineArgs": "--port 7225"
     }
   }
 }
