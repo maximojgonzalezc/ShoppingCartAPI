@@ -80,45 +80,47 @@
     private double totalPrice;
 
     protected override async Task OnInitializedAsync()
-{
-    try
     {
-        // Configurar la solicitud HTTP para obtener productos con la clave de funciones
-
-        //var products = await Http.GetFromJsonAsync<List<ProductDto>>("api/products");
-
-        var request = new HttpRequestMessage(HttpMethod.Get, "api/products");
-        request.Headers.Add("x-functions-key", "464246");
-
-        // Enviar la solicitud y obtener la respuesta
-        var response = await Http.SendAsync(request);
-
-        // Verificar si la respuesta fue exitosa
-        if (response.IsSuccessStatusCode)
+        try
         {
-            // Leer el contenido de la respuesta como string JSON
-            var jsonContent = await response.Content.ReadAsStringAsync();
+            // Crear la solicitud HTTP para obtener productos
+            var request = new HttpRequestMessage(HttpMethod.Get, "api/products");
+            // request.Headers.Add("x-functions-key", "464246"); // Clave de función
 
-            // Deserializar el JSON a una lista de ProductDto
-                products = JsonSerializer.Deserialize<List<ProductDto>>(jsonContent, new JsonSerializerOptions
+            // Enviar la solicitud y obtener la respuesta
+            var response = await Http.SendAsync(request);
+
+            // Verificar si la respuesta fue exitosa
+            if (response.IsSuccessStatusCode)
             {
-                PropertyNameCaseInsensitive = true
-            }) ?? new List<ProductDto>();
+                // Leer el contenido de la respuesta como string JSON
+                var jsonContent = await response.Content.ReadAsStringAsync();
 
-            // Inicializar los ítems del carrito con los productos obtenidos
-            cartItems = products.Select(p => new CartItem { Product = p, Quantity = 1 }).ToList();
-            UpdateCartSummary();
+                // Deserializar el JSON a una lista de ProductDto
+                products = JsonSerializer.Deserialize<List<ProductDto>>(jsonContent, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    }) ?? new List<ProductDto>();
+
+                // Inicializar los ítems del carrito con los productos obtenidos
+                cartItems = products.Select(p => new CartItem { Product = p, Quantity = 1 }).ToList();
+                UpdateCartSummary();
+            }
+            else
+            {
+                Console.WriteLine($"Error al obtener productos: {response.StatusCode}");
+            }
         }
-        else
+        catch (HttpRequestException httpEx)
         {
-            Console.WriteLine($"Error: {response.StatusCode}");
+            Console.WriteLine("Error de solicitud HTTP: " + httpEx.Message);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error general al obtener productos: " + ex.Message);
         }
     }
-    catch (Exception ex)
-    {
-        Console.WriteLine("Error fetching products: " + ex.Message);
-    }
-}
+
 
 
     private void IncreaseQuantity(CartItem item)

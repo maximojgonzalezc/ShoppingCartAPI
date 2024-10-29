@@ -12,8 +12,8 @@ using ShoppingCart.Data.Contexts;
 namespace ShoppingCart.Data.Migrations
 {
     [DbContext(typeof(ShoppingCartContext))]
-    [Migration("20241029145634_UpdateModel")]
-    partial class UpdateModel
+    [Migration("20241029193421_FirstMigration")]
+    partial class FirstMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

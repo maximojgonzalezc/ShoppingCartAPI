@@ -55,7 +55,7 @@ public class ShoppingCartContext : DbContext
                 {
                     Name = "Brownie",
                     Price = 2.00,
-                    ImageURL = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHdr1eTXEMs68Dx-b_mZT0RpifEQ8so6A1unRsJlyJIPe0LUE2HQ"
+                    ImageURL = "https://static.itdg.com.br/images/640-400/0191a4f23349e54e618a65f2051d68a8/shutterstock-1915577575-2-.jpg"
                 },
                 new Product
                 {
@@ -75,7 +75,7 @@ public class ShoppingCartContext : DbContext
                 {
                     Name = "Mini Gingerbread Donut",
                     Price = 0.50,
-                    ImageURL = "https://s3.amazonaws.com/pinchofyum/gingerbread-donuts-22.jpg",
+                    ImageURL = "https://pinchofyum.com/wp-content/uploads/gingerbread-donuts-4.jpg",
                     DaysOfWeek = new List<DayOfWeek> { DayOfWeek.Tuesday }
                 }
             };

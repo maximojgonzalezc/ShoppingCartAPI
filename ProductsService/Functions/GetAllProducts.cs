@@ -27,6 +27,11 @@ public class GetAllProducts
 
         // Crear una respuesta con los productos en formato JSON
         var response = req.CreateResponse(System.Net.HttpStatusCode.OK);
+
+        response.Headers.Add("Access-Control-Allow-Origin", "*");
+        response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+        response.Headers.Add("Access-Control-Allow-Headers", "Content-Type");
+
         await response.WriteAsJsonAsync(products);
 
         return response;

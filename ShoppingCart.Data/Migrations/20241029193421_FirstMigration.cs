@@ -20,7 +20,6 @@ namespace ShoppingCart.Data.Migrations
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ImageURL = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Price = table.Column<double>(type: "float", nullable: false),
-                    SupportsBulkPricing = table.Column<bool>(type: "bit", nullable: false),
                     DaysOfWeek = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     SpecificDate = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },

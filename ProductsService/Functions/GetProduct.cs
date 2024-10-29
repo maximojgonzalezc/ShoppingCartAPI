@@ -44,6 +44,11 @@ namespace ProductsService.Functions
             }
 
             var response = req.CreateResponse(System.Net.HttpStatusCode.OK);
+
+            response.Headers.Add("Access-Control-Allow-Origin", "*");
+            response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+            response.Headers.Add("Access-Control-Allow-Headers", "Content-Type");
+
             await response.WriteAsJsonAsync(productDto);
 
             return response;
