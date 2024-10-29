@@ -50,31 +50,35 @@ public class ShoppingCartContext : DbContext
             return;
 
         var products = new List<Product>
-        {
-            new Product
             {
-                Name = "Cookie",
-                Price = 1.25,
-                DaysOfWeek = new List<DayOfWeek> { DayOfWeek.Friday }
-            },
-            new Product
-            {
-                Name = "Key Lime Cheesecake",
-                Price = 8.00,
-                SpecificDate = new DateTime(DateTime.Now.Year, 10, 1)
-            },
-            new Product
-            {
-                Name = "Mini Gingerbread Donut",
-                Price = 0.50,
-                DaysOfWeek = new List<DayOfWeek> { DayOfWeek.Tuesday }
-            },
-            new Product
-            {
-                Name = "Brownie",
-                Price = 2.00,
-            }
-        };
+                new Product
+                {
+                    Name = "Brownie",
+                    Price = 2.00,
+                    ImageURL = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHdr1eTXEMs68Dx-b_mZT0RpifEQ8so6A1unRsJlyJIPe0LUE2HQ"
+                },
+                new Product
+                {
+                    Name = "Key Lime Cheesecake",
+                    Price = 8.00,
+                    ImageURL = "http://1.bp.blogspot.com/-7we9Z0C_fpI/T90JXcg3YsI/AAAAAAAABn4/EN7u2vMuRug/s1600/key+lime+cheesecake+slice+in+front.jpg",
+                    SpecificDate = new DateTime(DateTime.Now.Year, 10, 1) // Ejemplo de fecha específica
+                },
+                new Product
+                {
+                    Name = "Cookie",
+                    Price = 1.25,
+                    ImageURL = "http://www.mayheminthekitchen.com/wp-content/uploads/2015/05/chocolate-cookie-square.jpg",
+                    DaysOfWeek = new List<DayOfWeek> { DayOfWeek.Friday }
+                },
+                new Product
+                {
+                    Name = "Mini Gingerbread Donut",
+                    Price = 0.50,
+                    ImageURL = "https://s3.amazonaws.com/pinchofyum/gingerbread-donuts-22.jpg",
+                    DaysOfWeek = new List<DayOfWeek> { DayOfWeek.Tuesday }
+                }
+            };
 
         Products.AddRange(products);
         SaveChanges();
