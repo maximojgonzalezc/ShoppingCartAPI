@@ -5,7 +5,8 @@
         public ProductDto Product { get; set; }
         public int Quantity { get; set; }
         public double TotalPrice => Quantity * Product.Price;
-    }
+        public int RemainingQuantityAfterSpecial { get; set; }
+}
 
     public class ProductDto
     {
