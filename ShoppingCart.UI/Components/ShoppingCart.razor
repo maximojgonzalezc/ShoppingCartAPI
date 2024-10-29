@@ -1,6 +1,5 @@
-﻿@inject HttpClient Http
-@namespace ShoppingCartUI.Components
-@using System.Text.Json
+﻿@namespace ShoppingCartUI.Components
+@using System.Globalization
 
 <section class="h-100 h-custom" style="background-color: #d2c9ff;">
     <div class="container py-5 h-100">
@@ -15,6 +14,10 @@
                                     <div class="d-flex justify-content-between align-items-center mb-5">
                                         <h1 class="fw-bold mb-0">Shopping Cart</h1>
                                         <h6 class="mb-0 text-muted">@cartItems.Count items</h6>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="purchaseDate">Select Purchase Date:</label>
+                                        <input type="date" id="purchaseDate" @bind="purchaseDate" class="form-control" />
                                     </div>
                                     <hr class="my-4">
 
@@ -31,13 +34,13 @@
                                                 <button class="btn btn-link px-2" @onclick="() => DecreaseQuantity(item)">
                                                     <i class="fas fa-minus"></i>
                                                 </button>
-                                                <input min="0" name="quantity" type="number" class="form-control form-control-sm" value="@item.Quantity" />
+                                                <input min="0" name="quantity" type="number" class="form-control form-control-sm" @bind="item.Quantity" />
                                                 <button class="btn btn-link px-2" @onclick="() => IncreaseQuantity(item)">
                                                     <i class="fas fa-plus"></i>
                                                 </button>
                                             </div>
                                             <div class="col-md-3 col-lg-2 col-xl-2 offset-lg-1">
-                                                <h6 class="mb-0">€ @item.TotalPrice</h6>
+                                                <h6 class="mb-0">$ @item.TotalPrice.ToString("0.##")</h6>
                                             </div>
                                             <div class="col-md-1 col-lg-1 col-xl-1 text-end">
                                                 <button class="text-muted" @onclick="() => RemoveItem(item)"><i class="fas fa-times"></i></button>
@@ -58,8 +61,24 @@
                                     <hr class="my-4">
 
                                     <div class="d-flex justify-content-between mb-4">
-                                        <h5 class="text-uppercase">items @totalItems</h5>
-                                        <h5>€ @totalPrice</h5>
+                                        <h5 class="text-uppercase">Items @totalItems</h5>
+                                        <h5>$ @totalPrice.ToString("0.##")</h5>
+                                    </div>
+
+                                    <h5 class="text-uppercase mb-3">Discounts</h5>
+                                    <ul>
+                                        <li>Special Day Discount: $ @specialDayDiscountFormatted</li>
+                                        <li>Bulk Discount: $ @bulkDiscountFormatted</li>
+                                    </ul>
+                                    <div class="d-flex justify-content-between mb-4">
+                                        <h5>Total Savings</h5>
+                                        <h5>- $ @totalSavingsFormatted</h5>
+                                    </div>
+
+                                    <hr class="my-4">
+                                    <div class="d-flex justify-content-between mb-5">
+                                        <h5 class="text-uppercase">Total Price</h5>
+                                        <h5>$ @finalPriceFormatted</h5>
                                     </div>
 
                                     <button class="btn btn-dark btn-block btn-lg">Proceed to Checkout</button>
@@ -72,147 +91,3 @@
         </div>
     </div>
 </section>
-
-@code {
-    private List<ProductDto> products = new List<ProductDto>();
-    private List<CartItem> cartItems = new List<CartItem>();
-    private int totalItems;
-    private double totalPrice;
-
-    protected override async Task OnInitializedAsync()
-    {
-        try
-        {
-            // Crear la solicitud HTTP para obtener productos
-            var request = new HttpRequestMessage(HttpMethod.Get, "api/products");
-            // request.Headers.Add("x-functions-key", "464246"); // Clave de función
-
-            // Enviar la solicitud y obtener la respuesta
-            var response = await Http.SendAsync(request);
-
-            // Verificar si la respuesta fue exitosa
-            if (response.IsSuccessStatusCode)
-            {
-                // Leer el contenido de la respuesta como string JSON
-                var jsonContent = await response.Content.ReadAsStringAsync();
-
-                // Deserializar el JSON a una lista de ProductDto
-                products = JsonSerializer.Deserialize<List<ProductDto>>(jsonContent, new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true
-                    }) ?? new List<ProductDto>();
-
-                // Inicializar los ítems del carrito con los productos obtenidos
-                cartItems = products.Select(p => new CartItem { Product = p, Quantity = 1 }).ToList();
-                UpdateCartSummary();
-            }
-            else
-            {
-                Console.WriteLine($"Error al obtener productos: {response.StatusCode}");
-            }
-        }
-        catch (HttpRequestException httpEx)
-        {
-            Console.WriteLine("Error de solicitud HTTP: " + httpEx.Message);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine("Error general al obtener productos: " + ex.Message);
-        }
-    }
-
-
-
-    private void IncreaseQuantity(CartItem item)
-    {
-        item.Quantity++;
-        UpdateCartSummary();
-    }
-
-    private void DecreaseQuantity(CartItem item)
-    {
-        if (item.Quantity > 1)
-        {
-            item.Quantity--;
-            UpdateCartSummary();
-        }
-    }
-
-    private void RemoveItem(CartItem item)
-    {
-        cartItems.Remove(item);
-        UpdateCartSummary();
-    }
-
-    private void UpdateCartSummary()
-    {
-        totalItems = cartItems.Sum(i => i.Quantity);
-        totalPrice = cartItems.Sum(i => CalculateItemTotal(i.Product, i.Quantity));
-    }
-
-    private double CalculateItemTotal(ProductDto product, int quantity)
-    {
-        double total = 0.0;
-        bool isSpecialDay = (product.SpecificDate.HasValue && product.SpecificDate.Value.Date == DateTime.Today.Date) ||
-                            product.DaysOfWeek.Contains(DateTime.Today.DayOfWeek);
-
-        var specialDiscount = product.Discounts
-            .FirstOrDefault(d => isSpecialDay && d.DiscountType == DiscountType.SpecialDay && d.RequiredQuantity <= quantity);
-
-        if (specialDiscount != null)
-        {
-            int sets = quantity / specialDiscount.RequiredQuantity;
-            total += specialDiscount.CalculateDiscount(product.Price, sets * specialDiscount.RequiredQuantity);
-            quantity %= specialDiscount.RequiredQuantity;
-        }
-
-        var bulkDiscount = product.Discounts
-            .FirstOrDefault(d => d.DiscountType == DiscountType.Bulk && d.RequiredQuantity <= quantity);
-
-        if (bulkDiscount != null)
-        {
-            int sets = quantity / bulkDiscount.RequiredQuantity;
-            total += bulkDiscount.CalculateDiscount(product.Price, sets * bulkDiscount.RequiredQuantity);
-            quantity %= bulkDiscount.RequiredQuantity;
-        }
-
-        total += quantity * product.Price;
-        return total;
-    }
-
-    private class CartItem
-    {
-        public ProductDto Product { get; set; }
-        public int Quantity { get; set; }
-        public double TotalPrice => Quantity * Product.Price;
-    }
-
-    private class ProductDto
-    {
-        public int Id { get; set; }
-        public string Name { get; set; }
-        public double Price { get; set; }
-        public List<DiscountDto> Discounts { get; set; } = new();
-        public List<DayOfWeek> DaysOfWeek { get; set; } = new();
-        public DateTime? SpecificDate { get; set; }
-        public string ImageURL { get; set; }
-    }
-
-    private class DiscountDto
-    {
-        public int RequiredQuantity { get; set; }
-        public double DiscountPercentage { get; set; }
-        public DiscountType DiscountType { get; set; }
-
-        public double CalculateDiscount(double basePrice, int quantity)
-        {
-            return quantity * basePrice * (1 - DiscountPercentage);
-        }
-    }
-
-    private enum DiscountType
-    {
-        SpecialDay,
-        Bulk
-    }
-}

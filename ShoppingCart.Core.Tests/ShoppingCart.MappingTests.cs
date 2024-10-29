@@ -60,6 +60,42 @@ namespace ShoppingCart.Tests
         }
 
         [TestMethod]
+        public void Given_ProductDto_When_MappingToProduct_Then_PropertiesShouldMatch()
+        {
+            // Given
+            var productDto = new ProductDto
+            {
+                Id = 2,
+                Name = "Brownie",
+                Price = 2.00,
+                DaysOfWeek = new List<DayOfWeek> { DayOfWeek.Tuesday },
+                Discounts = new List<DiscountDto>
+                {
+                    new DiscountDto
+                    {
+                        Id = 2,
+                        ProductId = 2,
+                        RequiredQuantity = 4,
+                        DiscountPercentage = 0.15,
+                        DiscountType = DiscountType.Bulk
+                    }
+                }
+            };
+
+            // When
+            var product = _mapper.Map<Product>(productDto);
+
+            // Then
+            product.Should().NotBeNull();
+            product.Id.Should().Be(productDto.Id);
+            product.Name.Should().Be(productDto.Name);
+            product.Price.Should().Be(productDto.Price);
+            product.DaysOfWeek.Should().BeEquivalentTo(productDto.DaysOfWeek);
+            product.Discounts.Should().HaveCount(productDto.Discounts.Count);
+            product.Discounts.First().DiscountPercentage.Should().Be(productDto.Discounts.First().DiscountPercentage);
+        }
+
+        [TestMethod]
         public void Given_Discount_When_MappingToDiscountDto_Then_PropertiesShouldMatch()
         {
             // Given
@@ -82,6 +118,31 @@ namespace ShoppingCart.Tests
             discountDto.RequiredQuantity.Should().Be(discount.RequiredQuantity);
             discountDto.DiscountPercentage.Should().Be(discount.DiscountPercentage);
             discountDto.DiscountType.Should().Be((DiscountType)discount.DiscountType);
+        }
+
+        [TestMethod]
+        public void Given_DiscountDto_When_MappingToDiscount_Then_PropertiesShouldMatch()
+        {
+            // Given
+            var discountDto = new DiscountDto
+            {
+                Id = 3,
+                ProductId = 3,
+                RequiredQuantity = 10,
+                DiscountPercentage = 0.30,
+                DiscountType = DiscountType.SpecialDay
+            };
+
+            // When
+            var discount = _mapper.Map<Discount>(discountDto);
+
+            // Then
+            discount.Should().NotBeNull();
+            discount.Id.Should().Be(discountDto.Id);
+            discount.ProductId.Should().Be(discountDto.ProductId);
+            discount.RequiredQuantity.Should().Be(discountDto.RequiredQuantity);
+            discount.DiscountPercentage.Should().Be(discountDto.DiscountPercentage);
+            discount.DiscountType.Should().Be((int)discountDto.DiscountType);
         }
     }
 }

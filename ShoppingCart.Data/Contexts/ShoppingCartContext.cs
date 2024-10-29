@@ -49,86 +49,93 @@ public class ShoppingCartContext : DbContext
         if (Products.Any())
             return;
 
+        // Definir los productos
         var products = new List<Product>
-            {
-                new Product
-                {
-                    Name = "Brownie",
-                    Price = 2.00,
-                    ImageURL = "https://static.itdg.com.br/images/640-400/0191a4f23349e54e618a65f2051d68a8/shutterstock-1915577575-2-.jpg"
-                },
-                new Product
-                {
-                    Name = "Key Lime Cheesecake",
-                    Price = 8.00,
-                    ImageURL = "http://1.bp.blogspot.com/-7we9Z0C_fpI/T90JXcg3YsI/AAAAAAAABn4/EN7u2vMuRug/s1600/key+lime+cheesecake+slice+in+front.jpg",
-                    SpecificDate = new DateTime(DateTime.Now.Year, 10, 1) // Ejemplo de fecha específica
-                },
-                new Product
-                {
-                    Name = "Cookie",
-                    Price = 1.25,
-                    ImageURL = "http://www.mayheminthekitchen.com/wp-content/uploads/2015/05/chocolate-cookie-square.jpg",
-                    DaysOfWeek = new List<DayOfWeek> { DayOfWeek.Friday }
-                },
-                new Product
-                {
-                    Name = "Mini Gingerbread Donut",
-                    Price = 0.50,
-                    ImageURL = "https://pinchofyum.com/wp-content/uploads/gingerbread-donuts-4.jpg",
-                    DaysOfWeek = new List<DayOfWeek> { DayOfWeek.Tuesday }
-                }
-            };
+    {
+        new Product
+        {
+            Name = "Brownie",
+            Price = 2.00,
+            ImageURL = "https://static.itdg.com.br/images/640-400/0191a4f23349e54e618a65f2051d68a8/shutterstock-1915577575-2-.jpg"
+        },
+        new Product
+        {
+            Name = "Key Lime Cheesecake",
+            Price = 8.00,
+            ImageURL = "http://1.bp.blogspot.com/-7we9Z0C_fpI/T90JXcg3YsI/AAAAAAAABn4/EN7u2vMuRug/s1600/key+lime+cheesecake+slice+in+front.jpg",
+            SpecificDate = new DateTime(DateTime.Now.Year, 10, 1) // Ejemplo de fecha específica
+        },
+        new Product
+        {
+            Name = "Cookie",
+            Price = 1.25,
+            ImageURL = "http://www.mayheminthekitchen.com/wp-content/uploads/2015/05/chocolate-cookie-square.jpg",
+            DaysOfWeek = new List<DayOfWeek> { DayOfWeek.Friday }
+        },
+        new Product
+        {
+            Name = "Mini Gingerbread Donut",
+            Price = 0.50,
+            ImageURL = "https://pinchofyum.com/wp-content/uploads/gingerbread-donuts-4.jpg",
+            DaysOfWeek = new List<DayOfWeek> { DayOfWeek.Tuesday }
+        }
+    };
 
+        // Guardar productos
         Products.AddRange(products);
         SaveChanges();
 
-        // Recuperar los productos para asociar en descuentos
+        // Recuperar productos para asignar descuentos
         var cookie = Products.First(p => p.Name == "Cookie");
         var cheesecake = Products.First(p => p.Name == "Key Lime Cheesecake");
         var donut = Products.First(p => p.Name == "Mini Gingerbread Donut");
         var brownie = Products.First(p => p.Name == "Brownie");
 
-        // Crear descuentos sin referencia a DaysOfWeek en Discounts
+        // Crear descuentos específicos para cada producto
         var discounts = new List<Discount>
+    {
+        // Descuento para "Cookie" - Special Day y Bulk
+        new Discount
         {
-            new Discount
-            {
-                ProductId = cookie.Id,
-                RequiredQuantity = 8,
-                DiscountPercentage = 0.40,
-                DiscountType = (int)DiscountType.SpecialDay
-            },
-            new Discount
-            {
-                ProductId = cheesecake.Id,
-                RequiredQuantity = 1,
-                DiscountPercentage = 0.25,
-                DiscountType = (int)DiscountType.SpecialDay
-            },
-            new Discount
-            {
-                ProductId = donut.Id,
-                RequiredQuantity = 2,
-                DiscountPercentage = 0.50,
-                DiscountType = (int)DiscountType.SpecialDay
-            },
-            new Discount
-            {
-                ProductId = cookie.Id,
-                RequiredQuantity = 6,
-                DiscountPercentage = 0.20,
-                DiscountType = (int)DiscountType.Bulk
-            },
-            new Discount
-            {
-                ProductId = brownie.Id,
-                RequiredQuantity = 4,
-                DiscountPercentage = 0.125,
-                DiscountType = (int)DiscountType.Bulk
-            }
-        };
+            ProductId = cookie.Id,
+            RequiredQuantity = 8,
+            DiscountPercentage = 0.40,
+            DiscountType = (int)DiscountType.SpecialDay
+        },
+        new Discount
+        {
+            ProductId = cookie.Id,
+            RequiredQuantity = 6,
+            DiscountPercentage = 0.20,
+            DiscountType = (int)DiscountType.Bulk
+        },
+        // Descuento para "Key Lime Cheesecake" - Special Day
+        new Discount
+        {
+            ProductId = cheesecake.Id,
+            RequiredQuantity = 1,
+            DiscountPercentage = 0.25,
+            DiscountType = (int)DiscountType.SpecialDay
+        },
+        // Descuento para "Mini Gingerbread Donut" - Special Day
+        new Discount
+        {
+            ProductId = donut.Id,
+            RequiredQuantity = 2,
+            DiscountPercentage = 0.50,
+            DiscountType = (int)DiscountType.SpecialDay
+        },
+        // Descuento para "Brownie" - Bulk
+        new Discount
+        {
+            ProductId = brownie.Id,
+            RequiredQuantity = 4,
+            DiscountPercentage = 0.125,
+            DiscountType = (int)DiscountType.Bulk
+        }
+    };
 
+        // Guardar descuentos
         Discounts.AddRange(discounts);
         SaveChanges();
     }
