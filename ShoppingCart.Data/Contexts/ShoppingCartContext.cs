@@ -86,7 +86,6 @@ public class ShoppingCartContext : DbContext
 
         var discounts = new List<Discount>
     {
-        // Descuento para "Cookie" - Special Day y Bulk
         new Discount
         {
             ProductId = cookie.Id,
@@ -101,7 +100,6 @@ public class ShoppingCartContext : DbContext
             DiscountPercentage = 0.20,
             DiscountType = (int)DiscountType.Bulk
         },
-        // Descuento para "Key Lime Cheesecake" - Special Day
         new Discount
         {
             ProductId = cheesecake.Id,
@@ -109,7 +107,6 @@ public class ShoppingCartContext : DbContext
             DiscountPercentage = 0.25,
             DiscountType = (int)DiscountType.SpecialDay
         },
-        // Descuento para "Mini Gingerbread Donut" - Special Day
         new Discount
         {
             ProductId = donut.Id,
@@ -117,7 +114,6 @@ public class ShoppingCartContext : DbContext
             DiscountPercentage = 0.50,
             DiscountType = (int)DiscountType.SpecialDay
         },
-        // Descuento para "Brownie" - Bulk
         new Discount
         {
             ProductId = brownie.Id,
@@ -127,7 +123,6 @@ public class ShoppingCartContext : DbContext
         }
     };
 
-        // Guardar descuentos
         Discounts.AddRange(discounts);
         SaveChanges();
     }
