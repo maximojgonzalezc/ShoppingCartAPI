@@ -8,7 +8,7 @@ public class Discount
     public int ProductId { get; set; }
     public Product Product { get; set; }
 
-    public int RequiredQuantity { get; set; } // Cantidad mínima para aplicar el descuento
-    public double? DiscountPercentage { get; set; } // Porcentaje de descuento para día especial
-    public int DiscountType { get; set; } // Tipo de descuento (SpecialDay o Bulk)
+    public int RequiredQuantity { get; set; } 
+    public double? DiscountPercentage { get; set; } 
+    public int DiscountType { get; set; }
 }

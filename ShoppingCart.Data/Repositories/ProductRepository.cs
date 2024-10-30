@@ -17,14 +17,14 @@ public class ProductRepository : IProductRepository
     public async Task<Product?> GetProductByIdAsync(int id)
     {
         return await _context.Products
-            .Include(p => p.Discounts) // Incluir los descuentos relacionados
+            .Include(p => p.Discounts) 
             .FirstOrDefaultAsync(p => p.Id == id);
     }
 
     public async Task<IEnumerable<Product>> GetAllProductsAsync()
     {
         return await _context.Products
-            .Include(p => p.Discounts) // Incluir los descuentos en la consulta de todos los productos
+            .Include(p => p.Discounts)
             .ToListAsync();
     }
 }

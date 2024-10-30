@@ -2,8 +2,8 @@
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
+using ShoppingCart.Core.DTOs;
 using ShoppingCart.Core.Interfaces;
-using ShoppingCart.Core.Models;
 
 namespace ProductsService.Functions;
 
@@ -11,7 +11,7 @@ public class CalculateCartTotal
 {
     private readonly ILogger<CalculateCartTotal> _logger;
     private readonly IShoppingCartService _cartService;
-    private readonly IProductService _productService; // Inyectar el servicio de productos
+    private readonly IProductService _productService;
 
     public CalculateCartTotal(ILogger<CalculateCartTotal> logger, IShoppingCartService cartService, IProductService productService)
     {
@@ -22,8 +22,17 @@ public class CalculateCartTotal
 
     [Function("CalculateCartTotal")]
     public async Task<HttpResponseData> Run(
-    [HttpTrigger(AuthorizationLevel.Function, "post", Route = "cart/calculate")] HttpRequestData req)
+    [HttpTrigger(AuthorizationLevel.Function, "post", "options", Route = "cart/calculate")] HttpRequestData req)
     {
+        if (req.Method == HttpMethod.Options.Method)
+        {
+            var preflightResponse = req.CreateResponse(System.Net.HttpStatusCode.OK);
+            preflightResponse.Headers.Add("Access-Control-Allow-Origin", "*");
+            preflightResponse.Headers.Add("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+            preflightResponse.Headers.Add("Access-Control-Allow-Headers", "Content-Type");
+            return preflightResponse;
+        }
+
         _logger.LogInformation("Calculating cart total...");
 
         var requestBody = await req.ReadAsStringAsync();
@@ -35,7 +44,7 @@ public class CalculateCartTotal
         }
 
         var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-        var cartRequest = JsonSerializer.Deserialize<CartRequest>(requestBody, options);
+        var cartRequest = JsonSerializer.Deserialize<ShoppingCartDto>(requestBody, options);
 
         if (cartRequest == null || cartRequest.Items == null || cartRequest.Items.Count == 0)
         {
@@ -48,14 +57,6 @@ public class CalculateCartTotal
 
         foreach (var item in cartRequest.Items)
         {
-            if (item.ProductId == 0)
-            {
-                var invalidProductResponse = req.CreateResponse(System.Net.HttpStatusCode.BadRequest);
-                invalidProductResponse.WriteString("Product ID is missing.");
-                return invalidProductResponse;
-            }
-
-            // Obtener el producto desde el servicio
             var product = await _productService.GetProductByIdAsync(item.ProductId);
             if (product == null)
             {
@@ -63,15 +64,18 @@ public class CalculateCartTotal
                 notFoundResponse.WriteString($"Product with ID {item.ProductId} not found.");
                 return notFoundResponse;
             }
-
             await _cartService.AddItem(product.Id, item.Quantity);
         }
 
         var total = _cartService.CalculateTotal(cartRequest.Date);
         var response = req.CreateResponse(System.Net.HttpStatusCode.OK);
+
+        response.Headers.Add("Access-Control-Allow-Origin", "*");
+        response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+        response.Headers.Add("Access-Control-Allow-Headers", "Content-Type");
+
         await response.WriteAsJsonAsync(new { Total = total });
 
         return response;
     }
-
 }

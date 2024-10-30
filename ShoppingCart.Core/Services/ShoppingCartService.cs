@@ -39,11 +39,9 @@ namespace ShoppingCart.Core.Services
         {
             double total = 0.0;
 
-            // Determinar si es un día especial (día específico o día de la semana)
             bool isSpecialDay = (product.SpecificDate.HasValue && product.SpecificDate.Value.Date == date.Date) ||
                                 product.DaysOfWeek.Contains(date.DayOfWeek);
 
-            // Buscar descuento especial para días específicos
             var specialDiscount = product.Discounts
                 .FirstOrDefault(d => isSpecialDay && d.DiscountType == DiscountType.SpecialDay && d.RequiredQuantity <= quantity);
 
@@ -54,7 +52,6 @@ namespace ShoppingCart.Core.Services
                 quantity %= specialDiscount.RequiredQuantity;
             }
 
-            // Buscar descuento por cantidad (Bulk)
             var bulkDiscount = product.Discounts
                 .FirstOrDefault(d => d.DiscountType == DiscountType.Bulk && d.RequiredQuantity <= quantity);
 
@@ -65,7 +62,6 @@ namespace ShoppingCart.Core.Services
                 quantity %= bulkDiscount.RequiredQuantity;
             }
 
-            // Calcular el costo para la cantidad restante sin descuento
             total += quantity * product.Price;
             return total;
         }

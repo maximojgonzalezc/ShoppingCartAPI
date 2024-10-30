@@ -9,6 +9,6 @@ public class Product
     public string? ImageURL { get; set; }
     public double Price { get; set; }
     public List<Discount> Discounts { get; set; } = new List<Discount>();
-    public List<DayOfWeek>? DaysOfWeek { get; set; } = new(); // Días aplicables semanalmente
-    public DateTime? SpecificDate { get; set; } // Día específico (e.g., 1 de octubre)
+    public List<DayOfWeek>? DaysOfWeek { get; set; } = new();
+    public DateTime? SpecificDate { get; set; } 
 }

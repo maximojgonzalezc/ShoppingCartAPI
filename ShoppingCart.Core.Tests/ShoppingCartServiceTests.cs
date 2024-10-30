@@ -60,7 +60,7 @@ public class ShoppingCartServiceTests
             Name = "Mini Gingerbread Donut",
             Price = 0.50,
             Discounts = new List<DiscountDto> { new DiscountDto { RequiredQuantity = 2, DiscountPercentage = 0.50, DiscountType = DiscountType.SpecialDay } },
-            DaysOfWeek = new List<DayOfWeek> { DayOfWeek.Tuesday } // Descuento aplicable solo los martes
+            DaysOfWeek = new List<DayOfWeek> { DayOfWeek.Tuesday } 
         };
 
         _productServiceMock.Setup(ps => ps.GetProductByIdAsync(cookie.Id)).ReturnsAsync(cookie);
@@ -73,8 +73,7 @@ public class ShoppingCartServiceTests
         await _cartService.AddItem(cheesecake.Id, 1);
         await _cartService.AddItem(donut.Id, 2);
 
-        // Utiliza un día que no sea martes (por ejemplo, un miércoles) para evitar el descuento
-        var fixedDate = new DateTime(2024, 10, 30); // Un miércoles
+        var fixedDate = new DateTime(2024, 10, 30); 
         var total = _cartService.CalculateTotal(fixedDate);
 
         total.Should().Be(12.25, "because 1 cookie, 1 brownie, 1 cheesecake, and 2 donuts without sales total $12.25");

@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Json;
+using Blazored.Toast.Services;
 using Microsoft.AspNetCore.Components;
 using ShoppingCart.UI.Dtos;
 
@@ -9,8 +10,10 @@ public partial class ShoppingCart : ComponentBase
     [Inject]
     private HttpClient Http { get; set; }
 
+    [Inject] private IToastService ToastService { get; set; }
+
     private List<ProductDto> products = new List<ProductDto>();
-    private List<CartItem> cartItems = new List<CartItem>();
+    private List<CartItemDto> cartItems = new List<CartItemDto>();
     private int totalItems;
     private double totalPriceWithoutDiscount;
     private double totalPrice;
@@ -18,8 +21,8 @@ public partial class ShoppingCart : ComponentBase
     private double bulkDiscount;
     public DateTime purchaseDate = DateTime.Today;
 
-    // Formato para mostrar descuentos y precios
     private string specialDayDiscountFormatted => specialDayDiscount.ToString("0.##");
+
     private string bulkDiscountFormatted => bulkDiscount.ToString("0.##");
     private string totalSavingsFormatted => (specialDayDiscount + bulkDiscount).ToString("0.##");
     private string finalPriceFormatted => totalPrice.ToString("0.##");
@@ -27,8 +30,9 @@ public partial class ShoppingCart : ComponentBase
     protected override async Task OnInitializedAsync()
     {
         products = await Http.GetFromJsonAsync<List<ProductDto>>("api/products");
-        cartItems = products.Select(p => new CartItem { Product = p, Quantity = 1 }).ToList();
+        cartItems = products.Select(p => new CartItemDto { Product = p, Quantity = 1 }).ToList();
         UpdateCartSummary();
+
     }
 
     public void OnDateChanged(ChangeEventArgs e)
@@ -40,13 +44,13 @@ public partial class ShoppingCart : ComponentBase
         }
     }
 
-    public void IncreaseQuantity(CartItem item)
+    public void IncreaseQuantity(CartItemDto item)
     {
         item.Quantity++;
         UpdateCartSummary();
     }
 
-    public void DecreaseQuantity(CartItem item)
+    public void DecreaseQuantity(CartItemDto item)
     {
         if (item.Quantity > 1)
         {
@@ -55,7 +59,7 @@ public partial class ShoppingCart : ComponentBase
         }
     }
 
-    public void RemoveItem(CartItem item)
+    public void RemoveItem(CartItemDto item)
     {
         cartItems.Remove(item);
         UpdateCartSummary();
@@ -66,11 +70,9 @@ public partial class ShoppingCart : ComponentBase
         totalItems = cartItems.Sum(i => i.Quantity);
         totalPriceWithoutDiscount = cartItems.Sum(i => i.Product.Price * i.Quantity);
 
-        // Reiniciar descuentos para recalcular
         specialDayDiscount = CalculateSpecialDayDiscount();
-        bulkDiscount = CalculateBulkDiscount();  // Solo aplica si no hubo descuento de "special day" completo
+        bulkDiscount = CalculateBulkDiscount(); 
 
-        // Calcular el precio total final con descuentos aplicados
         totalPrice = totalPriceWithoutDiscount - specialDayDiscount - bulkDiscount;
     }
 
@@ -81,7 +83,6 @@ public partial class ShoppingCart : ComponentBase
         {
             var product = item.Product;
 
-            // Comprobar si aplica descuento "special day" para este producto
             bool isSpecialDay = (product.SpecificDate.HasValue && product.SpecificDate.Value.Date == purchaseDate.Date) ||
                                 product.DaysOfWeek.Contains(purchaseDate.DayOfWeek);
 
@@ -93,7 +94,6 @@ public partial class ShoppingCart : ComponentBase
                 int specialSets = item.Quantity / discount.RequiredQuantity;
                 specialDiscountTotal += specialSets * discount.RequiredQuantity * product.Price * discount.DiscountPercentage;
 
-                // Ajustar cantidad restante después del "special day" para posibles "bulk discounts"
                 item.RemainingQuantityAfterSpecial = item.Quantity % discount.RequiredQuantity;
             }
             else
@@ -110,7 +110,7 @@ public partial class ShoppingCart : ComponentBase
         foreach (var item in cartItems)
         {
             var product = item.Product;
-            var remainingQuantity = item.RemainingQuantityAfterSpecial;  // Cantidad restante para aplicar "bulk discount"
+            var remainingQuantity = item.RemainingQuantityAfterSpecial; 
 
             var discount = product.Discounts
                 .FirstOrDefault(d => d.DiscountType == DiscountType.Bulk && d.RequiredQuantity <= remainingQuantity);
@@ -122,5 +122,44 @@ public partial class ShoppingCart : ComponentBase
             }
         }
         return bulkDiscountTotal;
+    }
+
+    public async Task ValidateCartTotalAsync()
+    {
+        var cartRequest = new ShoppingCartDto
+        {
+            Date = purchaseDate,
+            Items = cartItems
+                .Where(ci => ci.Quantity > 0)
+                .Select(ci => new ShoppingCartItemDto
+                {
+                    ProductId = ci.Product.Id,
+                    Quantity = ci.Quantity
+                }).ToList()
+        };
+
+        var response = await Http.PostAsJsonAsync("api/cart/calculate", cartRequest);
+        if (response.IsSuccessStatusCode)
+        {
+            var result = await response.Content.ReadFromJsonAsync<CartTotalResponse>();
+
+            if (result != null && result.Total == totalPrice)
+            {
+                Console.WriteLine("Cart total validated successfully.");
+                ToastService.ShowSuccess("Cart total validated successfully.");
+            }
+            else
+            {
+                Console.WriteLine("Validation failed: totals do not match.");
+                ToastService.ShowWarning("Validation failed: totals do not match.");
+            }
+        }
+        else
+        {
+            Console.WriteLine("Error validating cart total: " + response.ReasonPhrase);
+            ToastService.ShowError("Validation failed: totals do not match.");
+        }
+
+        StateHasChanged();
     }
 }

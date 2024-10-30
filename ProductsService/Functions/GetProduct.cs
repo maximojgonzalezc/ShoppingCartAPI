@@ -33,7 +33,6 @@ namespace ProductsService.Functions
                 return badRequestResponse;
             }
 
-            // Obtener el producto desde el servicio de productos
             var productDto = await _productService.GetProductByIdAsync(productId);
 
             if (productDto == null)

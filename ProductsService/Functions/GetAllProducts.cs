@@ -22,10 +22,8 @@ public class GetAllProducts
     {
         _logger.LogInformation("Fetching all products...");
 
-        // Obtener todos los productos desde el servicio
         var products = await _productService.GetAllProductsAsync();
 
-        // Crear una respuesta con los productos en formato JSON
         var response = req.CreateResponse(System.Net.HttpStatusCode.OK);
 
         response.Headers.Add("Access-Control-Allow-Origin", "*");

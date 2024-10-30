@@ -1,4 +1,16 @@
 ﻿@inherits LayoutComponentBase
+@using Blazored.Toast
+@using Blazored.Toast.Configuration
+
+<BlazoredToasts Position="ToastPosition.BottomRight"
+                RemoveToastsOnNavigation="false"
+                IconType="IconType.FontAwesome"
+                ErrorIcon="icon-alert"
+                InfoIcon="icon-info"
+                SuccessIcon="icon-approved"
+                WarningIcon="icon-alert-triangle"
+                ShowProgressBar="@false"
+                ShowCloseButton="@true"/>
 
 <div class="page">
     <div class="sidebar">
