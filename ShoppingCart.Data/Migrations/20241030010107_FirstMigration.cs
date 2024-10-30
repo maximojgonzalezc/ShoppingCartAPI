@@ -15,13 +15,13 @@ namespace ShoppingCart.Data.Migrations
                 name: "Products",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ImageURL = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Price = table.Column<double>(type: "float", nullable: false),
-                    DaysOfWeek = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    SpecificDate = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Name = table.Column<string>(type: "TEXT", nullable: true),
+                    ImageURL = table.Column<string>(type: "TEXT", nullable: true),
+                    Price = table.Column<double>(type: "REAL", nullable: false),
+                    DaysOfWeek = table.Column<string>(type: "TEXT", nullable: true),
+                    SpecificDate = table.Column<DateTime>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -32,12 +32,12 @@ namespace ShoppingCart.Data.Migrations
                 name: "Discounts",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    ProductId = table.Column<int>(type: "int", nullable: false),
-                    RequiredQuantity = table.Column<int>(type: "int", nullable: false),
-                    DiscountPercentage = table.Column<double>(type: "float", nullable: true),
-                    DiscountType = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    ProductId = table.Column<int>(type: "INTEGER", nullable: false),
+                    RequiredQuantity = table.Column<int>(type: "INTEGER", nullable: false),
+                    DiscountPercentage = table.Column<double>(type: "REAL", nullable: true),
+                    DiscountType = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {

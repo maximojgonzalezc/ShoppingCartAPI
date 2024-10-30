@@ -17,6 +17,8 @@ public class ShoppingCartContext : DbContext
     {
     }
 
+    public ShoppingCartContext() { }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         var daysOfWeekConverter = new ValueConverter<List<DayOfWeek>, string>(

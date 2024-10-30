@@ -1,14 +1,16 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using ShoppingCart.Data.Contexts;
 
-public class ShoppingCartContextFactory : IDesignTimeDbContextFactory<ShoppingCartContext>
+namespace ShoppingCart.Data.Contexts
 {
-    public ShoppingCartContext CreateDbContext(string[] args)
+    public class ShoppingCartContextFactory : IDesignTimeDbContextFactory<ShoppingCartContext>
     {
-        var optionsBuilder = new DbContextOptionsBuilder<ShoppingCartContext>();
-        optionsBuilder.UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=ShoppingCartDb;Trusted_Connection=True;");
+        public ShoppingCartContext CreateDbContext(string[] args)
+        {
+            var optionsBuilder = new DbContextOptionsBuilder<ShoppingCartContext>();
+            optionsBuilder.UseSqlite("Data Source=ShoppingCartDb;Mode=memory;Cache=shared");
 
-        return new ShoppingCartContext(optionsBuilder.Options);
+            return new ShoppingCartContext(optionsBuilder.Options);
+        }
     }
 }

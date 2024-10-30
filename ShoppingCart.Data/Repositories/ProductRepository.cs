@@ -14,7 +14,7 @@ public class ProductRepository : IProductRepository
         _context = context;
     }
 
-    public async Task<Product?> GetProductByIdAsync(int id)
+        public async Task<Product?> GetProductByIdAsync(int id)
     {
         return await _context.Products
             .Include(p => p.Discounts) 
